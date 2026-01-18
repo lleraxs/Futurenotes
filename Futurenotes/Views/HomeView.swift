@@ -2,13 +2,12 @@ import SwiftUI
 import SwiftData
 
 struct HomeView: View {
-    // Эта магия подтягивает данные из базы в реальном времени
     @Query(sort: \Prediction.creationDate, order: .reverse) var predictions: [Prediction]
+    @Environment(\.modelContext) private var modelContext
     @State private var showingCreateSheet = false
     
-    // Твои цвета из Фигмы
     let bgPurple = Color(red: 0.35, green: 0.25, blue: 0.45)
-    let mainBg = Color(red: 1.0, green: 1.0, blue: 1.0)
+    let mainBg = Color.white
     
     var body: some View {
         NavigationStack {
@@ -16,7 +15,7 @@ struct HomeView: View {
                 mainBg.ignoresSafeArea()
                 
                 VStack(spacing: 20) {
-                    // ШАПКА
+                    // Шапка
                     VStack(spacing: 8) {
                         Text("FutureNotes").font(.title3).bold()
                         Image(systemName: "aperture").font(.largeTitle)
@@ -26,7 +25,7 @@ struct HomeView: View {
                     .padding().frame(maxWidth: .infinity)
                     .background(bgPurple).foregroundColor(.white).cornerRadius(20).padding(.horizontal)
 
-                    // СТАТИСТИКА (Квадраты теперь кнопки)
+                    // Статистика
                     LazyVGrid(columns: [GridItem(), GridItem()], spacing: 12) {
                         NavigationLink(destination: PredictionListView(filter: .locked)) {
                             StatCard(title: "Gesperrt", value: predictions.filter { $0.openingDate > Date() }.count)
@@ -43,7 +42,7 @@ struct HomeView: View {
                     }
                     .padding(.horizontal)
 
-                    // КНОПКА СОЗДАНИЯ
+                    // Кнопка создания
                     Button(action: { showingCreateSheet.toggle() }) {
                         Label("Neue Nachricht erstellen", systemImage: "plus")
                             .font(.headline).padding()
@@ -52,7 +51,7 @@ struct HomeView: View {
                     }
                     .padding(.horizontal)
                     
-                    // ТВОЯ ЛЕНТА (Возвращена как в первой версии)
+                    // Лента
                     ScrollView {
                         if predictions.isEmpty {
                             VStack(spacing: 15) {
@@ -89,7 +88,6 @@ struct HomeView: View {
     }
 }
 
-// Компонент квадратика, чтобы не было ошибки "Cannot find StatCard"
 struct StatCard: View {
     var title: String
     var value: Int

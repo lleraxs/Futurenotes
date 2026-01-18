@@ -1,119 +1,135 @@
 import SwiftUI
 import SwiftData
+
 struct PredictionDetailView: View {
-    @Bindable var prediction: Prediction // Используем @Bindable, чтобы менять статус
+    @Bindable var prediction: Prediction
+    @Environment(\.modelContext) private var modelContext // Контекст для удаления
+    @Environment(\.dismiss) var dismiss
     
+    let bgMain = Color.white
+    let purpleHeader = Color(red: 0.30, green: 0.20, blue: 0.42)
+    let cardPurple = Color(red: 0.58, green: 0.40, blue: 0.61)
+
     var body: some View {
         ZStack {
-            Color(red: 1.0, green: 1.0, blue: 1.0).ignoresSafeArea() // Розовый фон
+            bgMain.ignoresSafeArea()
             
-            VStack(spacing: 20) {
-                // Верхняя плашка с заголовком
+            VStack(spacing: 0) {
+                // Хедер
                 HStack {
-                    Text(prediction.title.isEmpty ? "Ohne Titel" : prediction.title)
-                        .font(.title2).bold()
+                    Text(prediction.title.isEmpty ? "Titel..." : prediction.title)
+                        .font(.title3).bold()
                     Spacer()
-                    Image(systemName: "aperture").font(.title2)
+                    Image(systemName: "aperture").font(.title)
                 }
-                .padding()
-                .background(Color(red: 0.29, green: 0.19, blue: 0.43))
+                .padding(25)
+                .background(purpleHeader)
                 .foregroundColor(.white)
-                .cornerRadius(15)
-                .shadow(radius: 5)
-                
-                // Основной блок контента
-                VStack(alignment: .leading) {
+                .cornerRadius(20)
+                .padding(.horizontal)
+                .padding(.top, 10)
+
+                // Кнопка Zurück
+                HStack {
+                    Button(action: { dismiss() }) {
+                        Text("< Zurück")
+                            .font(.system(size: 14, weight: .bold))
+                            .padding(.horizontal, 20).padding(.vertical, 8)
+                            .background(Color.black).foregroundColor(.white).clipShape(Capsule())
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 30).padding(.vertical, 10)
+
+                // Основная карточка
+                VStack(spacing: 15) {
                     Text("Deine Nachricht:")
-                        .foregroundColor(.white)
-                        .font(.headline)
-                        .padding(.top)
-                        .padding(.horizontal)
-                    
-                    // Градиентный квадрат
+                        .font(.headline).foregroundColor(.white)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding([.horizontal, .top])
+
                     ZStack {
                         LinearGradient(
-                            gradient: Gradient(colors: [
-                                Color(red: 0.29, green: 0.19, blue: 0.43), // Темный верх
-                                Color(red: 0.75, green: 0.55, blue: 0.85)  // Светлый низ
-                            ]),
-                            startPoint: .top,
-                            endPoint: .bottom
+                            colors: [Color(red: 0.29, green: 0.19, blue: 0.43), Color(red: 0.75, green: 0.55, blue: 0.85)],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
                         )
-                        .cornerRadius(20)
+                        .cornerRadius(25)
                         
-                        // Контент внутри квадрата
-                        if Date() >= prediction.openingDate {
-                            // ОТКРЫТО
+                        if Date() < prediction.openingDate {
+                            VStack(spacing: 10) {
+                                Image(systemName: "lock.fill").font(.largeTitle)
+                                Text("Diese Vorhersage\nist noch gesperrt.")
+                                    .font(.title3).bold().multilineTextAlignment(.center)
+                            }
+                            .foregroundColor(.white)
+                        } else {
                             ScrollView {
                                 Text(prediction.text)
-                                    .font(.body)
                                     .foregroundColor(.white)
                                     .padding()
-                                    .multilineTextAlignment(.center)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .onAppear {
+                                        prediction.isOpened = true // Помечаем как открытое
+                                    }
                             }
-                        } else {
-                            // ЗАКРЫТО
-                            VStack {
-                                Spacer()
-                                Text("Diese Nachricht\nist noch gesperrt.")
-                                    .font(.title3).bold()
-                                    .foregroundColor(.white)
-                                    .multilineTextAlignment(.center)
-                                Spacer()
-                            }
-                        }
-                        
-                        // Даты внизу квадрата (белые квадратики)
-                        VStack {
-                            Spacer()
-                            HStack(spacing: 15) {
-                                DateBox(title: "Erstellt:", date: prediction.creationDate)
-                                DateBox(title: "Öffnungsdatum:", date: prediction.openingDate)
-                            }
-                            .padding(.bottom, 20)
                         }
                     }
-                    .padding()
+                    .padding(.horizontal)
+                    
+                    // Даты
+                    HStack(spacing: 15) {
+                        DetailDateCard(label: "Erstellt:", date: prediction.creationDate)
+                        DetailDateCard(label: "Öffnungsdatum:", date: prediction.openingDate)
+                    }
+                    .padding(.horizontal)
+
+                    // КНОПКА УДАЛЕНИЯ
+                    Button(action: deletePrediction) {
+                        HStack {
+                            Image(systemName: "trash")
+                            Text("Nachricht löschen")
+                        }
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.red)
+                        .padding(.bottom, 15)
+                    }
                 }
-                .background(Color(red: 0.6, green: 0.4, blue: 0.7)) // Светло-фиолетовый фон контейнера
-                .cornerRadius(25)
-                
-                Spacer()
+                .frame(maxHeight: .infinity)
+                .background(cardPurple)
+                .cornerRadius(30)
+                .padding(.horizontal)
+                .padding(.bottom, 10)
             }
-            .padding()
         }
-        .onAppear {
-            // Если дата наступила, помечаем как "Открыто" (для статистики)
-            if Date() >= prediction.openingDate && !prediction.isOpened {
-                prediction.isOpened = true
-            }
+        .navigationBarHidden(true)
+    }
+
+    // Функция удаления
+    func deletePrediction() {
+        modelContext.delete(prediction)
+        do {
+            try modelContext.save()
+            dismiss() // Возвращаемся назад после удаления
+        } catch {
+            print("Ошибка при удалении: \(error.localizedDescription)")
         }
     }
 }
-
-// Маленький белый квадратик с датой
-struct DateBox: View {
-    var title: String
-    var date: Date
-    
+struct DetailDateCard: View {
+    let label: String
+    let date: Date
     var body: some View {
-        VStack(spacing: 2) {
-            Text(title).font(.caption2).foregroundColor(.black)
+        VStack(spacing: 4) {
+            Text(label)
+                .font(.system(size: 10))
+                .foregroundColor(.black.opacity(0.6))
             Text(date.formatted(date: .numeric, time: .omitted))
-                .font(.caption).bold().foregroundColor(.black)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(.black)
         }
-        .padding(8)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
         .background(Color.white)
-        .cornerRadius(8)
+        .cornerRadius(10)
     }
-}
-
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Prediction.self, configurations: config)
-    
-    let example = Prediction(title: "Hallo Zukunft!", text: "Das ist ein Test", openingDate: Date(), emoji: "🚀")
-    
-    return PredictionDetailView(prediction: example)
-        .modelContainer(container)
 }

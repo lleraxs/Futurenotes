@@ -1,43 +1,57 @@
 import SwiftUI
 import SwiftData
 
+enum PredictionFilter {
+    case locked, ready, opened, all
+}
+
 struct PredictionListView: View {
-    let filter: FilterType
+    let filter: PredictionFilter
+    @Environment(\.dismiss) var dismiss
     @Query var allPredictions: [Prediction]
+    @State private var selectedCategory: String = "Alle"
     
-    enum FilterType { case locked, ready, opened, all }
-    
-    var filtered: [Prediction] {
-        switch filter {
-        case .locked: return allPredictions.filter { $0.openingDate > Date() }
-        case .ready: return allPredictions.filter { $0.openingDate <= Date() && !$0.isOpened }
-        case .opened: return allPredictions.filter { $0.isOpened }
-        case .all: return allPredictions
+    let categories = ["Alle", "🌱 Leben", "📚 Schule", "💼 Arbeit", "🎯 Ziele", "✨ Sonstiges"]
+    let rowPurple = Color(red: 0.35, green: 0.25, blue: 0.45)
+
+    var filteredPredictions: [Prediction] {
+        allPredictions.filter { pred in
+            let matchesStatus: Bool
+            switch filter {
+            case .locked: matchesStatus = pred.openingDate > Date()
+            case .ready: matchesStatus = pred.openingDate <= Date() && !pred.isOpened
+            case .opened: matchesStatus = pred.isOpened
+            case .all: matchesStatus = true
+            }
+            let matchesCategory = (selectedCategory == "Alle" || pred.category == selectedCategory)
+            return matchesStatus && matchesCategory
         }
     }
 
     var body: some View {
-        ZStack {
-            Color(red: 1.0, green: 1.0, blue: 1.0).ignoresSafeArea()
-            List(filtered) { pred in
+        VStack {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack {
+                    ForEach(categories, id: \.self) { cat in
+                        Button(cat) { selectedCategory = cat }
+                            .padding(.horizontal).padding(.vertical, 8)
+                            .background(selectedCategory == cat ? Color.black : rowPurple.opacity(0.3))
+                            .foregroundColor(.white).cornerRadius(15)
+                    }
+                }.padding()
+            }
+            
+            List(filteredPredictions) { pred in
                 NavigationLink(destination: PredictionDetailView(prediction: pred)) {
                     HStack {
                         Text(pred.emoji)
-                        Text(pred.title.isEmpty ? "Vorhersage" : pred.title)
+                        Text(pred.title.isEmpty ? "Titel..." : pred.title)
                         Spacer()
-                        Text(pred.openingDate.formatted(date: .numeric, time: .omitted)).font(.caption)
+                        Text(pred.openingDate.formatted(date: .numeric, time: .omitted))
                     }
                 }
-                .listRowBackground(Color(red: 0.35, green: 0.25, blue: 0.45).opacity(0.8))
-                .foregroundColor(.white)
             }
-            .scrollContentBackground(.hidden)
         }
-        .navigationTitle("Liste")
+        .navigationTitle("Nachrichten")
     }
-}
-// ПРЕВЬЮ ДЛЯ СПИСКА
-#Preview {
-    PredictionListView(filter: .all)
-        .modelContainer(for: Prediction.self, inMemory: true)
 }

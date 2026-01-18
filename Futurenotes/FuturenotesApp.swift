@@ -7,6 +7,6 @@ struct FuturenotesApp: App {
         WindowGroup {
             HomeView()
         }
-        .modelContainer(for: Prediction.self) // Самая важная строка!
+        .modelContainer(for: Prediction.self)
     }
 }
