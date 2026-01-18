@@ -86,3 +86,7 @@ struct CreatePredictionsView: View {
         }
     }
 }
+#Preview {
+    CreatePredictionsView()
+        .modelContainer(for: Prediction.self, inMemory: true)
+}

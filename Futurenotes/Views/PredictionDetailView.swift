@@ -1,11 +1,11 @@
 import SwiftUI
-
+import SwiftData
 struct PredictionDetailView: View {
     @Bindable var prediction: Prediction // Используем @Bindable, чтобы менять статус
     
     var body: some View {
         ZStack {
-            Color(red: 0.75, green: 0.55, blue: 0.55).ignoresSafeArea() // Розовый фон
+            Color(red: 1.0, green: 1.0, blue: 1.0).ignoresSafeArea() // Розовый фон
             
             VStack(spacing: 20) {
                 // Верхняя плашка с заголовком
@@ -106,4 +106,14 @@ struct DateBox: View {
         .background(Color.white)
         .cornerRadius(8)
     }
+}
+
+#Preview {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Prediction.self, configurations: config)
+    
+    let example = Prediction(title: "Hallo Zukunft!", text: "Das ist ein Test", openingDate: Date(), emoji: "🚀")
+    
+    return PredictionDetailView(prediction: example)
+        .modelContainer(container)
 }

@@ -18,7 +18,7 @@ struct PredictionListView: View {
 
     var body: some View {
         ZStack {
-            Color(red: 0.75, green: 0.55, blue: 0.55).ignoresSafeArea()
+            Color(red: 1.0, green: 1.0, blue: 1.0).ignoresSafeArea()
             List(filtered) { pred in
                 NavigationLink(destination: PredictionDetailView(prediction: pred)) {
                     HStack {
@@ -35,4 +35,9 @@ struct PredictionListView: View {
         }
         .navigationTitle("Liste")
     }
+}
+// ПРЕВЬЮ ДЛЯ СПИСКА
+#Preview {
+    PredictionListView(filter: .all)
+        .modelContainer(for: Prediction.self, inMemory: true)
 }

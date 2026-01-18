@@ -8,7 +8,7 @@ struct HomeView: View {
     
     // Твои цвета из Фигмы
     let bgPurple = Color(red: 0.35, green: 0.25, blue: 0.45)
-    let mainBg = Color(red: 0.75, green: 0.55, blue: 0.55)
+    let mainBg = Color(red: 1.0, green: 1.0, blue: 1.0)
     
     var body: some View {
         NavigationStack {
