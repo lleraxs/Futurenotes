@@ -4,8 +4,7 @@ import SwiftUI
 struct FuturenotesApp: App {
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            StartScreen()
         }
     }
 }
-    .modelContainer(for: Prediction.self)

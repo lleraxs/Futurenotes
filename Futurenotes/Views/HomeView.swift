@@ -41,7 +41,7 @@ struct HomeView: View {
                 }
                 .padding(.top)
             }
-            .sheet(isPresented: $showingCreateSheet) { CreatePredictionsView() }
+            .sheet(isPresented: $showingCreateSheet) { CreatePredictionView() }
         }
     }
 }
