@@ -1,5 +1,6 @@
 import SwiftUI
-
+import SwiftData
+@Query(sort: \Prediction.creationDate, order: .reverse) var predictions: [Prediction]
 struct CreatePredictionsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) var dismiss
@@ -18,14 +19,22 @@ struct CreatePredictionsView: View {
                     Group {
                         Text("Was möchtest du schreiben?").bold()
                         TextField("Titel...", text: $title)
-                            .padding().background(Color.purple.opacity(0.2)).cornerRadius(10)
+                            .padding()
+                            .background(Color.purple.opacity(0.2))
+                            .cornerRadius(10)
                         
                         TextEditor(text: $text)
-                            .frame(height: 100).padding(4).background(Color.purple.opacity(0.1)).cornerRadius(10)
+                            .frame(height: 100)
+                            .padding(4)
+                            .background(Color.purple.opacity(0.1))
+                            .cornerRadius(10)
                     }
                     
                     DatePicker("Wann öffnen?", selection: $openingDate, displayedComponents: .date)
-                        .datePickerStyle(.graphical).padding().background(Color.purple.opacity(0.1)).cornerRadius(15)
+                        .datePickerStyle(.graphical)
+                        .padding()
+                        .background(Color.purple.opacity(0.1))
+                        .cornerRadius(15)
                     
                     Text("Wie fühlst du dich gerade?").bold()
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5)) {
@@ -40,21 +49,40 @@ struct CreatePredictionsView: View {
                     
                     Button(action: saveAction) {
                         Text("Nachricht speichern")
-                            .frame(maxWidth: .infinity).padding().background(Color.purple.opacity(0.5)).foregroundColor(.black).cornerRadius(25)
+                            .bold()
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.purple.opacity(0.5))
+                            .foregroundColor(.black)
+                            .cornerRadius(25)
                     }
                     .padding(.top)
                 }
                 .padding()
             }
             .navigationTitle("Neue Vorhersage")
-            .toolbar { ToolbarItem(placement: .topBarLeading) { Button("Zurück") { dismiss() } } }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Zurück") { dismiss() }
+                }
+            }
         }
     }
     
     func saveAction() {
-        
+        // 1. Создаем объект
         let new = Prediction(title: title, text: text, openingDate: openingDate, emoji: selectedEmoji)
+        
+        // 2. Вставляем его в контекст данных
         modelContext.insert(new)
-        dismiss()
+        
+        // 3. ПРИНУДИТЕЛЬНО сохраняем (чтобы HomeView увидел изменения)
+        do {
+            try modelContext.save()
+            print("Успешно сохранено!")
+            dismiss()
+        } catch {
+            print("Ошибка сохранения: \(error.localizedDescription)")
+        }
     }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct FuturenotesApp: App {
@@ -6,6 +7,6 @@ struct FuturenotesApp: App {
         WindowGroup {
             HomeView()
         }
+        .modelContainer(for: Prediction.self) // Самая важная строка!
     }
 }
-    .modelContainer(for: Prediction.self)

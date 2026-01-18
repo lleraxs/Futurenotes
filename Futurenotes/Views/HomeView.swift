@@ -1,61 +1,105 @@
 import SwiftUI
-import SwiftData // Обязательно добавь эту строку!
+import SwiftData
 
 struct HomeView: View {
-    @Query var predictions: [Prediction]
+    // Эта магия подтягивает данные из базы в реальном времени
+    @Query(sort: \Prediction.creationDate, order: .reverse) var predictions: [Prediction]
     @State private var showingCreateSheet = false
     
-    let bgPurple = Color(red: 0.35, green: 0.25, blue: 0.45) // Фиолетовый из Figma
+    // Твои цвета из Фигмы
+    let bgPurple = Color(red: 0.35, green: 0.25, blue: 0.45)
+    let mainBg = Color(red: 0.75, green: 0.55, blue: 0.55)
     
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(red: 0.75, green: 0.55, blue: 0.55).ignoresSafeArea() // Фон экрана
+                mainBg.ignoresSafeArea()
                 
-                VStack(spacing: 25) {
-                    // Шапка (как в Figma)
-                    VStack(spacing: 10) {
-                        Text("FutureNotes").font(.title2).bold()
-                        Image(systemName: "sun.max.fill").font(.system(size: 40))
-                        Text("Schreibe dir selber eine Nachricht und entdecke sie später wieder")
-                            .multilineTextAlignment(.center).font(.subheadline)
+                VStack(spacing: 20) {
+                    // ШАПКА
+                    VStack(spacing: 8) {
+                        Text("FutureNotes").font(.title3).bold()
+                        Image(systemName: "aperture").font(.largeTitle)
+                        Text("Schreibe dir selber eine Nachricht\nund entdecke sie später wieder")
+                            .multilineTextAlignment(.center).font(.caption)
                     }
-                    .padding().frame(maxWidth: .infinity).background(bgPurple).foregroundColor(.white).cornerRadius(20).padding(.horizontal)
+                    .padding().frame(maxWidth: .infinity)
+                    .background(bgPurple).foregroundColor(.white).cornerRadius(20).padding(.horizontal)
 
-                    // Сетка статистики (4 карточки)
-                    LazyVGrid(columns: [GridItem(), GridItem()], spacing: 15) {
-                        StatCard(title: "Gesperrt", value: predictions.filter { !$0.isOpened }.count)
-                        StatCard(title: "Bereit", value: 0)
-                        StatCard(title: "Geöffnet", value: predictions.filter { $0.isOpened }.count)
-                        StatCard(title: "Insgesamt", value: predictions.count)
+                    // СТАТИСТИКА (Квадраты теперь кнопки)
+                    LazyVGrid(columns: [GridItem(), GridItem()], spacing: 12) {
+                        NavigationLink(destination: PredictionListView(filter: .locked)) {
+                            StatCard(title: "Gesperrt", value: predictions.filter { $0.openingDate > Date() }.count)
+                        }
+                        NavigationLink(destination: PredictionListView(filter: .ready)) {
+                            StatCard(title: "Bereit", value: predictions.filter { $0.openingDate <= Date() && !$0.isOpened }.count)
+                        }
+                        NavigationLink(destination: PredictionListView(filter: .opened)) {
+                            StatCard(title: "Geöffnet", value: predictions.filter { $0.isOpened }.count)
+                        }
+                        NavigationLink(destination: PredictionListView(filter: .all)) {
+                            StatCard(title: "Insgesamt", value: predictions.count)
+                        }
                     }
                     .padding(.horizontal)
 
-                    // Кнопка создания
+                    // КНОПКА СОЗДАНИЯ
                     Button(action: { showingCreateSheet.toggle() }) {
                         Label("Neue Nachricht erstellen", systemImage: "plus")
-                            .padding().background(Color.black).foregroundColor(.white).clipShape(Capsule())
+                            .font(.headline).padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.black).foregroundColor(.white).clipShape(Capsule())
                     }
+                    .padding(.horizontal)
                     
-                    Spacer()
+                    // ТВОЯ ЛЕНТА (Возвращена как в первой версии)
+                    ScrollView {
+                        if predictions.isEmpty {
+                            VStack(spacing: 15) {
+                                Circle().stroke(bgPurple, lineWidth: 2).frame(width: 60, height: 60)
+                                    .overlay(Text("0").font(.title2))
+                                Text("Keine Nachrichten").bold()
+                            }.padding(.top, 40)
+                        } else {
+                            VStack(spacing: 12) {
+                                ForEach(predictions) { pred in
+                                    NavigationLink(destination: PredictionDetailView(prediction: pred)) {
+                                        HStack {
+                                            Text(pred.emoji).font(.title)
+                                            VStack(alignment: .leading) {
+                                                Text(pred.title.isEmpty ? "Vorhersage" : pred.title).bold()
+                                                Text("Öffnet: \(pred.openingDate.formatted(date: .numeric, time: .omitted))").font(.caption2)
+                                            }
+                                            Spacer()
+                                            Image(systemName: pred.openingDate > Date() ? "lock.fill" : "lock.open.fill")
+                                        }
+                                        .padding().background(bgPurple).foregroundColor(.white).cornerRadius(15)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                    }
                 }
-                .padding(.top)
             }
-            .sheet(isPresented: $showingCreateSheet) { CreatePredictionsView() }
+            .sheet(isPresented: $showingCreateSheet) {
+                CreatePredictionsView()
+            }
         }
     }
 }
 
+// Компонент квадратика, чтобы не было ошибки "Cannot find StatCard"
 struct StatCard: View {
     var title: String
     var value: Int
     var body: some View {
-        VStack {
-            Text(title).font(.headline)
-            Text("\(value)").font(.title).bold()
+        VStack(spacing: 5) {
+            Text(title).font(.caption).bold()
+            Text("\(value)").font(.title2).bold()
         }
-        .frame(maxWidth: .infinity, minHeight: 120)
+        .frame(maxWidth: .infinity, minHeight: 90)
         .background(Color(red: 0.35, green: 0.25, blue: 0.45))
-        .foregroundColor(.white).cornerRadius(20)
+        .foregroundColor(.white).cornerRadius(15)
     }
 }
