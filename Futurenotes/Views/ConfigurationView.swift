@@ -21,8 +21,8 @@ struct ConfigurationView: View {
             VStack(spacing: 30) {
                 // Logo Bereich
                 VStack {
-                    Image("Logo") // Hier exakt den Namen aus den Assets eintragen
-                        .resizable()   // Macht das Bild veränderbar in der Größe
+                    Image("Logo")
+                        .resizable()
                         .scaledToFit() // Behält das Seitenverhältnis bei (wichtig!)
                         .frame(width: 360, height: 300) // Hier kannst du die Größe einstellen
                 }
