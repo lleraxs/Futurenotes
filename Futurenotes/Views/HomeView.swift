@@ -2,10 +2,19 @@ import SwiftUI
 import SwiftData
 
 struct HomeView: View {
+    // Данные из базы
     @Query(sort: \Prediction.creationDate, order: .reverse) var predictions: [Prediction]
     @Environment(\.modelContext) private var modelContext
+    
+    // Состояния для экранов
     @State private var showingCreateSheet = false
     
+    // --- НАСТРОЙКИ (Добавлено) ---
+    @State private var language = "Deutsch"
+    @State private var isDarkMode = false
+    @State private var isLoggedIn = true
+    
+    // Цвета
     let bgPurple = Color(red: 0.35, green: 0.25, blue: 0.45)
     let mainBg = Color.white
     
@@ -15,17 +24,34 @@ struct HomeView: View {
                 mainBg.ignoresSafeArea()
                 
                 VStack(spacing: 20) {
-                    // Шапка
+                    
+                    // ФИОЛЕТОВАЯ ШАПКА
                     VStack(spacing: 8) {
+                        
+                        // КНОПКА НАСТРОЕК (Шестеренка) - Вставлена сюда!
+                        HStack {
+                            Spacer() // Толкает иконку вправо
+                            NavigationLink(destination: ConfigurationView(language: $language, isDarkMode: $isDarkMode, isLoggedIn: $isLoggedIn)) {
+                                Image(systemName: "gearshape.fill")
+                                    .foregroundColor(.white)
+                                    .font(.title2)
+                            }
+                        }
+                        .padding(.bottom, 5) // Небольшой отступ снизу от шестеренки
+
                         Text("FutureNotes").font(.title3).bold()
                         Image(systemName: "aperture").font(.largeTitle)
                         Text("Schreibe dir selber eine Nachricht\nund entdecke sie später wieder")
                             .multilineTextAlignment(.center).font(.caption)
                     }
-                    .padding().frame(maxWidth: .infinity)
-                    .background(bgPurple).foregroundColor(.white).cornerRadius(20).padding(.horizontal)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(bgPurple)
+                    .foregroundColor(.white)
+                    .cornerRadius(20)
+                    .padding(.horizontal)
 
-                    // Статистика
+                    // СТАТИСТИКА (Квадратики)
                     LazyVGrid(columns: [GridItem(), GridItem()], spacing: 12) {
                         NavigationLink(destination: PredictionListView(filter: .locked)) {
                             StatCard(title: "Gesperrt", value: predictions.filter { $0.openingDate > Date() }.count)
@@ -42,7 +68,7 @@ struct HomeView: View {
                     }
                     .padding(.horizontal)
 
-                    // Кнопка создания
+                    // КНОПКА СОЗДАНИЯ
                     Button(action: { showingCreateSheet.toggle() }) {
                         Label("Neue Nachricht erstellen", systemImage: "plus")
                             .font(.headline).padding()
@@ -51,7 +77,7 @@ struct HomeView: View {
                     }
                     .padding(.horizontal)
                     
-                    // Лента
+                    // СПИСОК ЗАМЕТОК
                     ScrollView {
                         if predictions.isEmpty {
                             VStack(spacing: 15) {
@@ -81,23 +107,30 @@ struct HomeView: View {
                     }
                 }
             }
+            // Вызов экрана создания
             .sheet(isPresented: $showingCreateSheet) {
                 CreatePredictionsView()
             }
         }
     }
 }
-
+// Вспомогательный компонент для квадратиков статистики
 struct StatCard: View {
     var title: String
     var value: Int
+    
     var body: some View {
         VStack(spacing: 5) {
-            Text(title).font(.caption).bold()
-            Text("\(value)").font(.title2).bold()
+            Text(title)
+                .font(.caption)
+                .bold()
+            Text("\(value)")
+                .font(.title2)
+                .bold()
         }
         .frame(maxWidth: .infinity, minHeight: 90)
-        .background(Color(red: 0.35, green: 0.25, blue: 0.45))
-        .foregroundColor(.white).cornerRadius(15)
+        .background(Color(red: 0.35, green: 0.25, blue: 0.45)) // Тот же фиолетовый
+        .foregroundColor(.white)
+        .cornerRadius(15)
     }
 }
