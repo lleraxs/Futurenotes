@@ -21,7 +21,7 @@ struct CreatePredictionsView: View {
                     
                     // 1. Title
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Gib deiner Nachricht einen Titel, damit du sie позже легко узнал.")
+                        Text("Gib deiner Nachricht einen Titel, damit du sie später easy erkennst.")
                             .font(.caption).foregroundColor(.secondary)
                         TextField("Titel...", text: $title)
                             .padding().background(Color.purple.opacity(0.1)).cornerRadius(10)
@@ -70,7 +70,7 @@ struct CreatePredictionsView: View {
                     
                     // 5. Emojis
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Wähle ein Emoji для текущего состояния.")
+                        Text("Wähle ein Emoji wie du dich gerade fühlst.")
                             .font(.caption).foregroundColor(.secondary)
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5)) {
                             ForEach(emojis, id: \.self) { emoji in
