@@ -6,32 +6,38 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct ConfigurationView: View {
     @Binding var language: String
     @Binding var isDarkMode: Bool
     @Binding var isLoggedIn: Bool
     
+    // Zustand für das Pop-up und den Reset-Alarm
+    @State private var showLanguagePopup = false
+    @State private var showResetAlert = false
+    
     var body: some View {
         ZStack {
-            // 1. Die unterste Ebene: Ein Rechteck, das den ganzen Bildschirm weiß füllt
-            Color.white
-                .ignoresSafeArea() // Damit auch der Bereich oben bei der Uhr weiß ist
+            // Hintergrund
+            Color.white.ignoresSafeArea()
+            
             VStack(spacing: 30) {
                 // Logo Bereich
                 VStack {
                     Image("Logo")
                         .resizable()
-                        .scaledToFit() // Behält das Seitenverhältnis bei (wichtig!)
-                        .frame(width: 360, height: 300) // Hier kannst du die Größe einstellen
+                        .scaledToFit()
+                        .frame(width: 360, height: 300)
                 }
                 .padding(.top)
                 
                 // Menü-Liste
                 List {
-                    NavigationLink(destination: ConfigurationLanguageView(selectedLanguage: $language)) {
-                        Label("Sprache (Deutsch)", systemImage: "globe")
+                    // Sprache öffnet jetzt das Pop-up
+                    Button(action: {
+                        withAnimation { showLanguagePopup = true }
+                    }) {
+                        Label("Sprache (\(language))", systemImage: "globe")
                             .foregroundColor(.black)
                     }
                     
@@ -45,8 +51,8 @@ struct ConfigurationView: View {
                             .foregroundColor(.black)
                     }
                     
-                    // NEU: Reset Button in Rot
-                    Button(action: { /* Logik zum Löschen hier */ }) {
+                    // Reset Button mit Bestätigung
+                    Button(action: { showResetAlert = true }) {
                         Label("Alle Notizen löschen", systemImage: "trash")
                             .foregroundColor(.red)
                     }
@@ -59,17 +65,91 @@ struct ConfigurationView: View {
                 .scrollContentBackground(.hidden)
                 .background(Color.white)
                 .listStyle(.insetGrouped)
+                
                 Button("< Zurück") { /* Zurück-Logik */ }
                     .buttonStyle(.borderedProminent).tint(.black)
             }
+            .blur(radius: showLanguagePopup ? 5 : 0) // Hintergrund verschwimmt bei Pop-up
+            
+            // Das Sprach-Pop-up Overlay
+            if showLanguagePopup {
+                Color.black.opacity(0.2)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation { showLanguagePopup = false }
+                    }
+                
+                LanguagePopupView(selectedLanguage: $language, isShowing: $showLanguagePopup)
+            }
+        }
+        // Bestätigungs-Dialog für den Reset
+        .alert("Notizen löschen", isPresented: $showResetAlert) {
+            Button("Abbrechen", role: .cancel) { }
+            Button("Alles löschen", role: .destructive) {
+                // Hier kommt euer Code zum Löschen der Daten rein
+                print("Daten wurden gelöscht")
+            }
+        } message: {
+            Text("Bist du sicher? Alle deine gespeicherten Notizen werden unwiderruflich entfernt.")
         }
     }
 }
 
-    #Preview {
-        ConfigurationView(
-            language: .constant("Deutsch"),
-            isDarkMode: .constant(false),
-            isLoggedIn: .constant(true)
-        )
+// MARK: - Sprach Pop-up View
+struct LanguagePopupView: View {
+    @Binding var selectedLanguage: String
+    @Binding var isShowing: Bool
+    
+    let sprachen = ["Deutsch", "English", "Português", "Українська"]
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Text("Sprache")
+                .font(.headline)
+                .padding(.top, 20)
+            
+            Text("Bitte gewünschte Sprache auswählen")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+                .padding(.bottom, 15)
+            
+            VStack(spacing: 0) {
+                ForEach(sprachen, id: \.self) { sprache in
+                    Button(action: {
+                        selectedLanguage = sprache
+                        withAnimation { isShowing = false }
+                    }) {
+                        HStack {
+                            Text(sprache)
+                                .foregroundColor(.black)
+                            Spacer()
+                            if selectedLanguage == sprache {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .padding()
+                        .frame(height: 50)
+                        .background(Color.gray.opacity(0.1))
+                    }
+                    Divider() // Trennlinie zwischen den Sprachen
+                }
+            }
+            .cornerRadius(15)
+            .padding()
+        }
+        .frame(width: 300)
+        .background(.ultraThinMaterial) // Der verschwommene Glas-Effekt
+        .cornerRadius(25)
+        .shadow(radius: 20)
     }
+}
+
+// MARK: - Preview
+#Preview {
+    ConfigurationView(
+        language: .constant("Deutsch"),
+        isDarkMode: .constant(false),
+        isLoggedIn: .constant(true)
+    )
+}
