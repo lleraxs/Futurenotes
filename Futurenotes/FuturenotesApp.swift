@@ -1,16 +1,15 @@
-
 import SwiftUI
+import SwiftData
 
 @main
 struct FuturenotesApp: App {
-    // Hier erstellen wir die "Quelle der Wahrheit" für deine Einstellungen.
-    // Diese Variablen leben so lange, wie die App offen ist.
     @State private var language = "Deutsch"
     @State private var isDarkMode = false
     @State private var isLoggedIn = true
     
     var body: some Scene {
         WindowGroup {
+            HomeView()
             NavigationStack {
                 if isLoggedIn {
                     // Hier müssen die Namen (language:, isDarkMode: ...) davor stehen!
@@ -26,7 +25,9 @@ struct FuturenotesApp: App {
                     }
                 }
             }
+            .modelContainer(for: Prediction.self) // Самая важная строка!
             .preferredColorScheme(isDarkMode ? .dark : .light)
+            
         }
     }
 }
