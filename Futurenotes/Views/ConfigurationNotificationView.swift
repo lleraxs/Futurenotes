@@ -19,7 +19,6 @@ struct ConfigurationNotificationView: View {
             
             VStack(alignment: .leading, spacing: 20) {
 
-
                 // 2. Überschrift mit Glocken-Icon
                 HStack(spacing: 15) {
                     Image(systemName: "bell.fill")
@@ -29,7 +28,7 @@ struct ConfigurationNotificationView: View {
                         .bold()
                 }
                 .padding(.horizontal, 25)
-                .padding(.top, 10)
+                .padding(.top, 50)
                 // 3. Die Schalter-Boxen
                 VStack(spacing: 1) {
                     // Erster Schalter: Benachrichtigung anzeigen
@@ -57,6 +56,8 @@ struct ConfigurationNotificationView: View {
                     .cornerRadius(15, corners: [.bottomLeft, .bottomRight]) // Nur unten abgerundet
                 }
                 .padding(.horizontal, 20)
+                .padding(.vertical, 50)
+
 
                 Spacer() // Schiebt alles nach oben
 
